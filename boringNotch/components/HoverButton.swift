@@ -9,7 +9,7 @@ import SwiftUI
 
 struct HoverButton: View {
     var icon: String
-    var iconColor: Color = Color(white: 0.85)
+    var iconColor: Color = Color(white: 0.9)
     var scale: Image.Scale = .medium
     /// When true, use the compact NotchNook-style sizing (24pt/28pt hit areas
     /// with small, weighted icon fonts) instead of the legacy 30pt/40pt
@@ -23,14 +23,14 @@ struct HoverButton: View {
 
     private var size: CGFloat {
         if compact {
-            return scale == .large ? 28 : 24
+            return scale == .large ? 26 : 22
         }
         return scale == .large ? 40 : 30
     }
 
     private var iconFont: Font {
         if compact {
-            return scale == .large ? .system(size: 15, weight: .bold) : .system(size: 11, weight: .semibold)
+            return scale == .large ? .system(size: 14, weight: .bold) : .system(size: 11, weight: .bold)
         }
         return scale == .large ? .largeTitle : .body
     }

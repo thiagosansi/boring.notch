@@ -230,13 +230,14 @@ struct MusicControlsView: View {
 
     private var slotToolbar: some View {
         let slots = activeSlots
-        return HStack(spacing: 4) {
+        return HStack(spacing: 6) {
             ForEach(Array(slots.enumerated()), id: \.offset) { index, slot in
                 slotView(for: slot)
                     .frame(alignment: .center)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.leading, -4)
     }
 
     private var activeSlots: [MusicControlButton] {
@@ -291,7 +292,7 @@ struct MusicControlsView: View {
                 MusicManager.shared.skip(seconds: 15)
             }
         case .none:
-            Color.clear.frame(height: 1)
+            EmptyView()
         }
     }
 
@@ -363,12 +364,12 @@ struct VolumeControlView: View {
                 }
             }) {
                 Image(systemName: volumeIcon)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(musicManager.volumeControlSupported ? .white : .gray)
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(musicManager.volumeControlSupported ? Color(white: 0.9) : .gray)
             }
             .buttonStyle(PlainButtonStyle())
             .disabled(!musicManager.volumeControlSupported)
-            .frame(width: 24)
+            .frame(width: 22, height: 22)
 
             if showVolumeSlider && musicManager.volumeControlSupported {
                 CustomSlider(
