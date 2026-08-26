@@ -61,7 +61,7 @@ struct WheelPicker: View {
         .scrollIndicators(.never)
         .scrollPosition(id: $scrollPosition, anchor: .center)
         .scrollTargetBehavior(.viewAligned)  // Ensures scroll view snaps the centered view
-        .safeAreaPadding(.horizontal, 4)
+        .safeAreaPadding(.horizontal)
         .sensoryFeedback(.alignment, trigger: haptics)
         .onChange(of: scrollPosition) { oldValue, newValue in
             if !byClick {
@@ -201,7 +201,7 @@ struct CalendarView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .center, spacing: 10) {
+            HStack(alignment: .center, spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(monthText)
                         .font(.system(size: 22, weight: .bold))
@@ -210,20 +210,19 @@ struct CalendarView: View {
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(Color(white: 0.45))
                 }
-                .frame(width: 52, alignment: .leading)
 
                 ZStack(alignment: .top) {
                     WheelPicker(selectedDate: $selectedDate, config: Config())
                     HStack(alignment: .top) {
                         LinearGradient(
-                            colors: [Color.black.opacity(0.9), .clear], startPoint: .leading, endPoint: .trailing
+                            colors: [Color.black, .clear], startPoint: .leading, endPoint: .trailing
                         )
-                        .frame(width: 10)
+                        .frame(width: 20)
                         Spacer()
                         LinearGradient(
-                            colors: [.clear, Color.black.opacity(0.9)], startPoint: .leading, endPoint: .trailing
+                            colors: [.clear, Color.black], startPoint: .leading, endPoint: .trailing
                         )
-                        .frame(width: 10)
+                        .frame(width: 20)
                     }
                 }
             }
