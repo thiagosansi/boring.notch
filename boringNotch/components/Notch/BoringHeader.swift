@@ -47,13 +47,12 @@ struct BoringHeader: View {
                                 vm.toggleCameraPreview()
                             }) {
                                 Capsule()
-                                    .fill(.black)
-                                    .frame(width: 30, height: 30)
+                                    .fill(Color.white.opacity(0.08))
+                                    .frame(width: 26, height: 26)
                                     .overlay {
                                         Image(systemName: "web.camera")
-                                            .foregroundColor(.white)
-                                            .padding()
-                                            .imageScale(.medium)
+                                            .font(.system(size: 11, weight: .semibold))
+                                            .foregroundColor(Color(white: 0.8))
                                     }
                             }
                             .buttonStyle(PlainButtonStyle())
@@ -63,16 +62,15 @@ struct BoringHeader: View {
                                 DispatchQueue.main.async {
                                     SettingsWindowController.shared.showWindow()
                                 }
-                                
+
                             }) {
                                 Capsule()
-                                    .fill(.black)
-                                    .frame(width: 30, height: 30)
+                                    .fill(Color.white.opacity(0.08))
+                                    .frame(width: 26, height: 26)
                                     .overlay {
                                         Image(systemName: "gear")
-                                            .foregroundColor(.white)
-                                            .padding()
-                                            .imageScale(.medium)
+                                            .font(.system(size: 11, weight: .semibold))
+                                            .foregroundColor(Color(white: 0.8))
                                     }
                             }
                             .buttonStyle(PlainButtonStyle())

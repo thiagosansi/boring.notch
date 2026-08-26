@@ -35,9 +35,9 @@ struct WheelPicker: View {
                 ForEach(0..<totalItems, id: \.self) { index in
                     if index < spacerNum || index >= spacerNum + dateCount {
                         // Leading/trailing spacers sized to match a date cell
-                        // (26pt circle + 6pt horizontal padding on each side)
+                        // (30pt cell width, matching dateButton's frame(width: 30))
                         Spacer()
-                            .frame(width: 38, height: 26)
+                            .frame(width: 30, height: 26)
                             .id(index)
                     } else {
                         let date = dateForItemIndex(index: index, spacerNum: spacerNum)
@@ -55,7 +55,7 @@ struct WheelPicker: View {
                     }
                 }
             }
-            .frame(height: 56)
+            .frame(height: 44)
             .scrollTargetLayout()
         }
         .scrollIndicators(.never)
@@ -89,42 +89,42 @@ struct WheelPicker: View {
         date: Date, isSelected: Bool, id: Int, onClick: @escaping () -> Void
     ) -> some View {
         let isToday = Calendar.current.isDateInToday(date)
+        let isWeekend = isWeekendDay(date)
         return Button(action: onClick) {
-            VStack(spacing: 8) {
-                dayText(date: dateToString(for: date), isToday: isToday, isSelected: isSelected)
-                dateCircle(date: date, isToday: isToday, isSelected: isSelected)
+            VStack(spacing: 4) {
+                dayText(date: dateToString(for: date), isToday: isToday, isSelected: isSelected, isWeekend: isWeekend)
+                dateNumber(date: date, isToday: isToday, isSelected: isSelected)
             }
+            .frame(width: 30)
             .padding(.vertical, 4)
-            .padding(.horizontal, 6)
-            .background(isSelected ? Color.effectiveAccentBackground : Color.clear)
-            .cornerRadius(10)
         }
         .buttonStyle(PlainButtonStyle())
         .id(id)
     }
 
-    private func dayText(date: String, isToday: Bool, isSelected: Bool) -> some View {
-        Text(date)
-            .font(.caption2)
-            .fontWeight(.medium)
-            .tracking(0.5)
-            .foregroundColor(isSelected ? .white : Color(white: 0.65))
+    private func isWeekendDay(_ date: Date) -> Bool {
+        let weekday = Calendar.current.component(.weekday, from: date)
+        return weekday == 1 || weekday == 7
     }
 
-    private func dateCircle(date: Date, isToday: Bool, isSelected: Bool) -> some View {
-        ZStack {
-            Circle()
-                .fill(isToday ? Color.effectiveAccent : .clear)
-                .frame(width: 26, height: 26)
-                .overlay(
-                    Circle()
-                        .stroke(Color.gray.opacity(0.3), lineWidth: 0)
-                )
+    private func dayText(date: String, isToday: Bool, isSelected: Bool, isWeekend: Bool) -> some View {
+        Text(date)
+            .font(.system(size: 9, weight: .semibold))
+            .tracking(0.5)
+            .foregroundColor(isWeekend ? Color(red: 1, green: 0.35, blue: 0.35).opacity(0.9) : Color(white: 0.45))
+    }
+
+    private func dateNumber(date: Date, isToday: Bool, isSelected: Bool) -> some View {
+        VStack(spacing: 4) {
             Text("\(date.date)")
-                .font(.callout)
-                .fontWeight(.semibold)
+                .font(.system(size: 13, weight: .semibold))
                 .monospacedDigit()
-                .foregroundColor(isSelected ? .white : Color(white: isToday ? 0.9 : 0.65))
+                .foregroundColor(
+                    isToday ? Color.effectiveAccent : (isSelected ? .white : Color(white: 0.55))
+                )
+            Circle()
+                .fill(isSelected ? Color(white: 0.55) : Color.clear)
+                .frame(width: 4, height: 4)
         }
     }
 
@@ -201,22 +201,15 @@ struct CalendarView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .top, spacing: 8) {
-                // Spacing (8) and top padding (4) mirror dateButton's own
-                // VStack(spacing: 8).padding(.vertical, 4) so the month label
-                // baseline lines up with the weekday row and the year label
-                // lines up with the date-number row of the wheel picker.
-                VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .center, spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(monthText)
-                        .font(.title3)
-                        .fontWeight(.semibold)
+                        .font(.system(size: 22, weight: .bold))
                         .foregroundColor(.white)
                     Text(selectedDate.formatted(.dateTime.year()))
-                        .font(.title3)
-                        .fontWeight(.light)
-                        .foregroundColor(Color(white: 0.55))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(Color(white: 0.45))
                 }
-                .padding(.top, 4)
 
                 ZStack(alignment: .top) {
                     WheelPicker(selectedDate: $selectedDate, config: Config())
@@ -250,8 +243,7 @@ struct CalendarView: View {
         // notch content) minus the header row (~32, BoringHeader's
         // max(24, effectiveClosedNotchHeight)) minus the VStack spacing
         // between the header and this view (~8) -> roughly 118-126pt. 126
-        // keeps a small buffer while giving the enlarged wheel-picker row
-        // (56pt, up from 50) the extra room it now needs.
+        // keeps a small buffer above the 44pt wheel-picker row.
         .frame(height: 126)
         .onChange(of: selectedDate) {
             Task {
@@ -277,16 +269,16 @@ struct EmptyEventsView: View {
     let selectedDate: Date
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 3) {
             Image(systemName: "calendar.badge.checkmark")
-                .font(.title2)
-                .foregroundColor(Color(white: 0.65))
+                .font(.system(size: 16))
+                .foregroundColor(Color(white: 0.4))
             Text(Calendar.current.isDateInToday(selectedDate) ? "No events today" : "No events")
-                .font(.subheadline)
-                .foregroundColor(.white)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(Color(white: 0.7))
             Text("Enjoy your free time!")
-                .font(.caption)
-                .foregroundColor(Color(white: 0.65))
+                .font(.system(size: 10))
+                .foregroundColor(Color(white: 0.45))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -396,21 +388,20 @@ struct EventListView: View {
                     .opacity(1.0)  // Ensure the toggle is always fully opaque
                     HStack {
                         Text(event.title)
-                            .font(.callout)
+                            .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.white)
                             .lineLimit(showFullEventTitles ? nil : 1)
                         Spacer(minLength: 0)
                         VStack(alignment: .trailing, spacing: 4) {
                             if event.isAllDay {
                                 Text("All-day")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.white)
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundColor(Color(white: 0.7))
                                     .lineLimit(1)
                             } else {
                                 Text(event.start, style: .time)
-                                    .foregroundColor(.white)
-                                    .font(.caption)
+                                    .foregroundColor(Color(white: 0.7))
+                                    .font(.system(size: 10))
                             }
                         }
                     }
@@ -433,15 +424,14 @@ struct EventListView: View {
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(event.title)
-                            .font(.callout)
-                            .fontWeight(.medium)
+                            .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.white)
                             .lineLimit(showFullEventTitles ? nil : 2)
 
                         if let location = event.location, !location.isEmpty {
                             Text(location)
-                                .font(.caption)
-                                .foregroundColor(Color(white: 0.65))
+                                .font(.system(size: 10))
+                                .foregroundColor(Color(white: 0.45))
                                 .lineLimit(1)
                         }
                     }
@@ -449,18 +439,17 @@ struct EventListView: View {
                     VStack(alignment: .trailing, spacing: 4) {
                         if event.isAllDay {
                             Text("All-day")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(.white)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(Color(white: 0.7))
                                 .lineLimit(1)
                         } else {
                             Text(event.start, style: .time)
-                                .foregroundColor(.white)
+                                .foregroundColor(Color(white: 0.7))
                             Text(event.end, style: .time)
-                                .foregroundColor(Color(white: 0.65))
+                                .foregroundColor(Color(white: 0.45))
                         }
                     }
-                    .font(.caption)
+                    .font(.system(size: 10))
                     .frame(minWidth: 44, alignment: .trailing)
                 }
                 .opacity(
