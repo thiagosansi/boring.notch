@@ -306,7 +306,9 @@ struct ContentView: View {
 
                             HStack(spacing: 6) {
                                 Image(systemName: bluetoothManager.iconName)
-                                    .foregroundStyle(bluetoothManager.isConnected ? Color.blue : Color.gray)
+                                    .symbolRenderingMode(.hierarchical)
+                                    .font(.system(size: 17, weight: .medium))
+                                    .foregroundStyle(bluetoothManager.isConnected ? Color.white : Color.gray)
                                 Text(bluetoothManager.isConnected ? "Connected" : "Disconnected")
                                     .font(.caption)
                                     .foregroundStyle(.gray)

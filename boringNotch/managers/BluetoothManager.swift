@@ -14,6 +14,10 @@ final class BluetoothManager: NSObject, ObservableObject {
 
     private var connectNotification: IOBluetoothUserNotification?
     private var disconnectNotifications: [String: IOBluetoothUserNotification] = [:]
+    private var pollTimer: Timer?
+    private var connectedAddresses: Set<String> = []
+    private var lastAnnouncedAt: Date = .distantPast
+    private var lastKey: String = ""
 
     private override init() {
         super.init()
@@ -21,11 +25,37 @@ final class BluetoothManager: NSObject, ObservableObject {
             forConnectNotifications: self,
             selector: #selector(deviceConnected(_:device:))
         )
+        // Seed current state silently, then poll: connect notifications don't fire reliably
+        // for every device (e.g. AirPods that auto-connect), so we also diff isConnected().
+        connectedAddresses = Self.currentlyConnectedAddresses()
+        pollTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
+            self?.poll()
+        }
     }
 
     deinit {
+        pollTimer?.invalidate()
         connectNotification?.unregister()
         disconnectNotifications.values.forEach { $0.unregister() }
+    }
+
+    private static func currentlyConnectedAddresses() -> Set<String> {
+        let devices = (IOBluetoothDevice.pairedDevices() as? [IOBluetoothDevice]) ?? []
+        return Set(devices.filter { $0.isConnected() }.compactMap { $0.addressString })
+    }
+
+    private func poll() {
+        let devices = (IOBluetoothDevice.pairedDevices() as? [IOBluetoothDevice]) ?? []
+        let now = Set(devices.filter { $0.isConnected() }.compactMap { $0.addressString })
+        guard now != connectedAddresses else { return }
+        let appeared = now.subtracting(connectedAddresses)
+        let vanished = connectedAddresses.subtracting(now)
+        connectedAddresses = now
+        for d in devices {
+            guard let addr = d.addressString else { continue }
+            if appeared.contains(addr) { announce(d, connected: true) }
+            else if vanished.contains(addr) { announce(d, connected: false) }
+        }
     }
 
     @objc private func deviceConnected(_ notification: IOBluetoothUserNotification, device: IOBluetoothDevice) {
@@ -46,6 +76,11 @@ final class BluetoothManager: NSObject, ObservableObject {
 
     private func announce(_ device: IOBluetoothDevice, connected: Bool) {
         guard Defaults[.showBluetoothNotifications] else { return }
+        // Notification + poll can both fire for the same event; collapse duplicates.
+        let key = "\(device.addressString ?? "")-\(connected)"
+        if key == lastKey, Date().timeIntervalSince(lastAnnouncedAt) < 4 { return }
+        lastKey = key; lastAnnouncedAt = Date()
+        if connected { connectedAddresses.insert(device.addressString ?? "") } else { connectedAddresses.remove(device.addressString ?? "") }
         let name = device.name ?? "Bluetooth"
         let icon = Self.icon(for: device)
         Task { @MainActor in
@@ -61,6 +96,8 @@ final class BluetoothManager: NSObject, ObservableObject {
         let name = (device.name ?? "").lowercased()
         if name.contains("airpods max") { return "airpodsmax" }
         if name.contains("airpods pro") { return "airpodspro" }
+        if name.contains("airpods 4") { return "airpods.gen4" }
+        if name.contains("airpods 3") { return "airpods.gen3" }
         if name.contains("airpods") { return "airpods" }
         if name.contains("beats") { return "beats.headphones" }
 
