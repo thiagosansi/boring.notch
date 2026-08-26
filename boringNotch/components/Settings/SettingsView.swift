@@ -361,13 +361,6 @@ struct Charge: View {
                 Defaults.Toggle(key: .showBluetoothNotifications) {
                     Text("Show Bluetooth connection notifications")
                 }
-                Defaults.Toggle(key: .showFocusNotifications) {
-                    Text("Show Focus mode changes")
-                }
-                if !FocusManager.shared.hasAccess {
-                    Text("Focus needs Full Disk Access: System Settings → Privacy & Security → Full Disk Access → enable boringNotch.")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
             } header: {
                 Text("General")
             }

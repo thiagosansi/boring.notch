@@ -19,7 +19,6 @@ enum SneakContentType {
     case battery
     case download
     case bluetooth
-    case focus
 }
 
 struct sneakPeek {
