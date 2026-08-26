@@ -22,6 +22,7 @@ struct ContentView: View {
     @ObservedObject var musicManager = MusicManager.shared
     @ObservedObject var batteryModel = BatteryStatusViewModel.shared
     @ObservedObject var bluetoothManager = BluetoothManager.shared
+    @ObservedObject var focusManager = FocusManager.shared
     @ObservedObject var brightnessManager = BrightnessManager.shared
     @ObservedObject var volumeManager = VolumeManager.shared
     @State private var hoverTask: Task<Void, Never>?
@@ -68,6 +69,10 @@ struct ContentView: View {
             chinWidth = openNotchSize.width
         } else if coordinator.expandingView.type == .bluetooth && coordinator.expandingView.show
             && vm.notchState == .closed && Defaults[.showBluetoothNotifications]
+        {
+            chinWidth = openNotchSize.width
+        } else if coordinator.expandingView.type == .focus && coordinator.expandingView.show
+            && vm.notchState == .closed && Defaults[.showFocusNotifications]
         {
             chinWidth = openNotchSize.width
         } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music)
@@ -308,6 +313,31 @@ struct ContentView: View {
                                 Image(systemName: bluetoothManager.iconName)
                                     .foregroundStyle(bluetoothManager.isConnected ? Color.blue : Color.gray)
                                 Text(bluetoothManager.isConnected ? "Connected" : "Disconnected")
+                                    .font(.caption)
+                                    .foregroundStyle(.gray)
+                            }
+                            .frame(width: 120, alignment: .trailing)
+                        }
+                        .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
+                      } else if coordinator.expandingView.type == .focus && coordinator.expandingView.show
+                        && vm.notchState == .closed && Defaults[.showFocusNotifications]
+                      {
+                        HStack(spacing: 0) {
+                            HStack {
+                                Text(focusManager.isActive ? focusManager.modeName : "Focus off")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.white)
+                                    .lineLimit(1)
+                            }
+
+                            Rectangle()
+                                .fill(.black)
+                                .frame(width: vm.closedNotchSize.width + 10)
+
+                            HStack(spacing: 6) {
+                                Image(systemName: focusManager.isActive ? focusManager.symbolName : "moon")
+                                    .foregroundStyle(focusManager.isActive ? Color.purple : Color.gray)
+                                Text(focusManager.isActive ? "On" : "Off")
                                     .font(.caption)
                                     .foregroundStyle(.gray)
                             }

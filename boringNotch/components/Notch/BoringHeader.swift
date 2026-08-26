@@ -11,6 +11,7 @@ import SwiftUI
 struct BoringHeader: View {
     @EnvironmentObject var vm: BoringViewModel
     @ObservedObject var batteryModel = BatteryStatusViewModel.shared
+    @ObservedObject var focusManager = FocusManager.shared
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     @StateObject var tvm = ShelfStateViewModel.shared
     var body: some View {
@@ -57,6 +58,19 @@ struct BoringHeader: View {
                                     }
                             }
                             .buttonStyle(PlainButtonStyle())
+                        }
+                        if focusManager.isActive {
+                            HStack(spacing: 4) {
+                                Image(systemName: focusManager.symbolName)
+                                    .imageScale(.small)
+                                Text(focusManager.modeName)
+                                    .font(.system(.caption, design: .rounded))
+                                    .lineLimit(1)
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .frame(height: 30)
+                            .background(Capsule().fill(Color.white.opacity(0.12)))
                         }
                         if Defaults[.settingsIconInNotch] {
                             Button(action: {
