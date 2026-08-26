@@ -21,6 +21,7 @@ struct ContentView: View {
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     @ObservedObject var musicManager = MusicManager.shared
     @ObservedObject var batteryModel = BatteryStatusViewModel.shared
+    @ObservedObject var bluetoothManager = BluetoothManager.shared
     @ObservedObject var brightnessManager = BrightnessManager.shared
     @ObservedObject var volumeManager = VolumeManager.shared
     @State private var hoverTask: Task<Void, Never>?
@@ -64,7 +65,11 @@ struct ContentView: View {
         if coordinator.expandingView.type == .battery && coordinator.expandingView.show
             && vm.notchState == .closed && Defaults[.showPowerStatusNotifications]
         {
-            chinWidth = 640
+            chinWidth = openNotchSize.width
+        } else if coordinator.expandingView.type == .bluetooth && coordinator.expandingView.show
+            && vm.notchState == .closed && Defaults[.showBluetoothNotifications]
+        {
+            chinWidth = openNotchSize.width
         } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music)
             && vm.notchState == .closed && (musicManager.isPlaying || !musicManager.isPlayerIdle)
             && coordinator.musicLiveActivityEnabled && !vm.hideOnClosed
@@ -282,6 +287,31 @@ struct ContentView: View {
                                 )
                             }
                             .frame(width: 76, alignment: .trailing)
+                        }
+                        .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
+                      } else if coordinator.expandingView.type == .bluetooth && coordinator.expandingView.show
+                        && vm.notchState == .closed && Defaults[.showBluetoothNotifications]
+                      {
+                        HStack(spacing: 0) {
+                            HStack {
+                                Text(bluetoothManager.deviceName)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.white)
+                                    .lineLimit(1)
+                            }
+
+                            Rectangle()
+                                .fill(.black)
+                                .frame(width: vm.closedNotchSize.width + 10)
+
+                            HStack(spacing: 6) {
+                                Image(systemName: bluetoothManager.iconName)
+                                    .foregroundStyle(bluetoothManager.isConnected ? Color.blue : Color.gray)
+                                Text(bluetoothManager.isConnected ? "Connected" : "Disconnected")
+                                    .font(.caption)
+                                    .foregroundStyle(.gray)
+                            }
+                            .frame(width: 120, alignment: .trailing)
                         }
                         .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
                       } else if coordinator.sneakPeek.show && Defaults[.inlineHUD] && (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && vm.notchState == .closed {
