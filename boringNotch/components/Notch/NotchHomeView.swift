@@ -16,9 +16,17 @@ struct MusicPlayerView: View {
     @EnvironmentObject var vm: BoringViewModel
     let albumArtNamespace: Namespace.ID
 
+    /// Fixed square size for the album art so it doesn't stretch to match
+    /// whatever height the calendar/controls column happens to need.
+    /// Sized (incl. the 5pt padding on each side) to comfortably fit the
+    /// ~170pt-tall open notch.
+    private let albumArtSize: CGFloat = 106
+
     var body: some View {
-        HStack {
-            AlbumArtView(vm: vm, albumArtNamespace: albumArtNamespace).padding(.all, 5)
+        HStack(alignment: .center, spacing: 0) {
+            AlbumArtView(vm: vm, albumArtNamespace: albumArtNamespace)
+                .frame(width: albumArtSize, height: albumArtSize)
+                .padding(.all, 5)
             MusicControlsView().drawingGroup().compositingGroup()
         }
     }
@@ -119,23 +127,32 @@ struct MusicControlsView: View {
     @Default(.musicControlSlots) private var slotConfig
     @Default(.musicControlSlotLimit) private var slotLimit
 
-    var body: some View {
-        VStack(alignment: .leading) {
-            songInfoAndSlider
-            slotToolbar
-        }
-        .buttonStyle(PlainButtonStyle())
+    /// Fixed height for the width-measuring GeometryReader around songInfo so
+    /// it reports an accurate width to MarqueeText without expanding to fill
+    /// all the vertical space offered by the row (that was the cause of the
+    /// gap between the artist name and the slider).
+    private var songInfoHeight: CGFloat {
+        Defaults[.enableLyrics] ? 54 : 36
     }
 
-    private var songInfoAndSlider: some View {
-        GeometryReader { geo in
-            VStack(alignment: .leading, spacing: 4) {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            GeometryReader { geo in
                 songInfo(width: geo.size.width)
-                musicSlider
             }
+            .frame(height: songInfoHeight)
+
+            Spacer(minLength: 0)
+
+            musicSlider
+
+            Spacer(minLength: 6)
+
+            slotToolbar
         }
         .padding(.top, 10)
-        .padding(.leading, 5)
+        .padding(.horizontal, 5)
+        .buttonStyle(PlainButtonStyle())
     }
 
     private func songInfo(width: CGFloat) -> some View {
@@ -205,14 +222,13 @@ struct MusicControlsView: View {
             ) { newValue in
                 MusicManager.shared.seek(to: newValue)
             }
-            .padding(.top, 5)
-            .frame(height: 36)
+            .padding(.top, 4)
         }
     }
 
     private var slotToolbar: some View {
         let slots = activeSlots
-        return HStack(spacing: 6) {
+        return HStack(spacing: 12) {
             ForEach(Array(slots.enumerated()), id: \.offset) { index, slot in
                 slotView(for: slot)
                     .frame(alignment: .center)
@@ -481,7 +497,7 @@ struct MusicSliderView: View {
 
 
     var body: some View {
-        VStack {
+        VStack(spacing: 4) {
             CustomSlider(
                 value: $sliderValue,
                 range: 0...duration,
@@ -502,9 +518,10 @@ struct MusicSliderView: View {
             .fontWeight(.medium)
             .foregroundColor(
                 Defaults[.playerColorTinting]
-                    ? Color(nsColor: color).ensureMinimumBrightness(factor: 0.6) : .gray
+                    ? Color(nsColor: color).ensureMinimumBrightness(factor: 0.6).opacity(0.7) : Color(white: 0.6)
             )
-            .font(.caption)
+            .font(.caption2)
+            .monospacedDigit()
         }
         .onChange(of: currentDate) {
            guard !dragging, timestampDate.timeIntervalSince(lastDragged) > -1 else { return }

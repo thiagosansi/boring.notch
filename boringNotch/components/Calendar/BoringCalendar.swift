@@ -35,8 +35,9 @@ struct WheelPicker: View {
                 ForEach(0..<totalItems, id: \.self) { index in
                     if index < spacerNum || index >= spacerNum + dateCount {
                         // Leading/trailing spacers sized to match a date cell
+                        // (26pt circle + 6pt horizontal padding on each side)
                         Spacer()
-                            .frame(width: 24, height: 24)
+                            .frame(width: 38, height: 26)
                             .id(index)
                     } else {
                         let date = dateForItemIndex(index: index, spacerNum: spacerNum)
@@ -54,7 +55,7 @@ struct WheelPicker: View {
                     }
                 }
             }
-            .frame(height: 50)
+            .frame(height: 56)
             .scrollTargetLayout()
         }
         .scrollIndicators(.never)
@@ -94,9 +95,9 @@ struct WheelPicker: View {
                 dateCircle(date: date, isToday: isToday, isSelected: isSelected)
             }
             .padding(.vertical, 4)
-            .padding(.horizontal, 4)
+            .padding(.horizontal, 6)
             .background(isSelected ? Color.effectiveAccentBackground : Color.clear)
-            .cornerRadius(8)
+            .cornerRadius(10)
         }
         .buttonStyle(PlainButtonStyle())
         .id(id)
@@ -104,7 +105,9 @@ struct WheelPicker: View {
 
     private func dayText(date: String, isToday: Bool, isSelected: Bool) -> some View {
         Text(date)
-            .font(.caption)
+            .font(.caption2)
+            .fontWeight(.medium)
+            .tracking(0.5)
             .foregroundColor(isSelected ? .white : Color(white: 0.65))
     }
 
@@ -112,14 +115,15 @@ struct WheelPicker: View {
         ZStack {
             Circle()
                 .fill(isToday ? Color.effectiveAccent : .clear)
-                .frame(width: 20, height: 20)
+                .frame(width: 26, height: 26)
                 .overlay(
                     Circle()
                         .stroke(Color.gray.opacity(0.3), lineWidth: 0)
                 )
             Text("\(date.date)")
-                .font(.body)
-                .fontWeight(.medium)
+                .font(.callout)
+                .fontWeight(.semibold)
+                .monospacedDigit()
                 .foregroundColor(isSelected ? .white : Color(white: isToday ? 0.9 : 0.65))
         }
     }
@@ -173,8 +177,10 @@ struct WheelPicker: View {
 
     private func dateToString(for date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "E"
+        formatter.dateFormat = "EEE"
         return formatter.string(from: date)
+            .replacingOccurrences(of: ".", with: "")
+            .uppercased()
     }
 }
 
@@ -183,19 +189,34 @@ struct CalendarView: View {
     @ObservedObject private var calendarManager = CalendarManager.shared
     @State private var selectedDate = Date()
 
+    /// Capitalized abbreviated month name with any locale-added trailing
+    /// period stripped (e.g. "ago." -> "Ago").
+    private var monthText: String {
+        var text = selectedDate.formatted(.dateTime.month(.abbreviated)).capitalized
+        if text.hasSuffix(".") {
+            text.removeLast()
+        }
+        return text
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 8) {
-                VStack(alignment: .leading) {
-                    Text(selectedDate.formatted(.dateTime.month(.abbreviated)))
+                // Spacing (8) and top padding (4) mirror dateButton's own
+                // VStack(spacing: 8).padding(.vertical, 4) so the month label
+                // baseline lines up with the weekday row and the year label
+                // lines up with the date-number row of the wheel picker.
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(monthText)
                         .font(.title3)
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
                     Text(selectedDate.formatted(.dateTime.year()))
                         .font(.title3)
                         .fontWeight(.light)
-                        .foregroundColor(Color(white: 0.65))
+                        .foregroundColor(Color(white: 0.55))
                 }
+                .padding(.top, 4)
 
                 ZStack(alignment: .top) {
                     WheelPicker(selectedDate: $selectedDate, config: Config())
@@ -224,7 +245,14 @@ struct CalendarView: View {
             }
         }
         .listRowBackground(Color.clear)
-        .frame(height: 120)
+        // The open notch is 170pt tall. Available height for this view is
+        // ~158 (170 - the 12pt bottom padding ContentView applies around the
+        // notch content) minus the header row (~32, BoringHeader's
+        // max(24, effectiveClosedNotchHeight)) minus the VStack spacing
+        // between the header and this view (~8) -> roughly 118-126pt. 126
+        // keeps a small buffer while giving the enlarged wheel-picker row
+        // (56pt, up from 50) the extra room it now needs.
+        .frame(height: 126)
         .onChange(of: selectedDate) {
             Task {
                 await calendarManager.updateCurrentDate(selectedDate)
@@ -247,11 +275,11 @@ struct CalendarView: View {
 
 struct EmptyEventsView: View {
     let selectedDate: Date
-    
+
     var body: some View {
-        VStack {
+        VStack(spacing: 4) {
             Image(systemName: "calendar.badge.checkmark")
-                .font(.title)
+                .font(.title2)
                 .foregroundColor(Color(white: 0.65))
             Text(Calendar.current.isDateInToday(selectedDate) ? "No events today" : "No events")
                 .font(.subheadline)
@@ -260,6 +288,7 @@ struct EmptyEventsView: View {
                 .font(.caption)
                 .foregroundColor(Color(white: 0.65))
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
