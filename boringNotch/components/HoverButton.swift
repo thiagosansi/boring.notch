@@ -9,33 +9,16 @@ import SwiftUI
 
 struct HoverButton: View {
     var icon: String
-    var iconColor: Color = Color(white: 0.85)
+    var iconColor: Color = .primary
     var scale: Image.Scale = .medium
-    /// When true, use the compact NotchNook-style sizing (24pt/28pt hit areas
-    /// with small, weighted icon fonts) instead of the legacy 30pt/40pt
-    /// sizing. Legacy call sites keep their original look by leaving this
-    /// false.
-    var compact: Bool = false
     var action: () -> Void
     var contentTransition: ContentTransition = .symbolEffect;
-
+    
     @State private var isHovering = false
 
-    private var size: CGFloat {
-        if compact {
-            return scale == .large ? 28 : 24
-        }
-        return scale == .large ? 40 : 30
-    }
-
-    private var iconFont: Font {
-        if compact {
-            return scale == .large ? .system(size: 15, weight: .bold) : .system(size: 11, weight: .semibold)
-        }
-        return scale == .large ? .largeTitle : .body
-    }
-
     var body: some View {
+        let size = CGFloat(scale == .large ? 40 : 30)
+        
         Button(action: action) {
             Rectangle()
                 .fill(.clear)
@@ -43,13 +26,13 @@ struct HoverButton: View {
                 .frame(width: size, height: size)
                 .overlay {
                     Capsule()
-                        .fill(isHovering ? (compact ? Color.white.opacity(0.08) : Color.gray.opacity(0.2)) : .clear)
+                        .fill(isHovering ? Color.gray.opacity(0.2) : .clear)
                         .frame(width: size, height: size)
                         .overlay {
                             Image(systemName: icon)
                                 .foregroundColor(iconColor)
                                 .contentTransition(contentTransition)
-                                .font(iconFont)
+                                .font(scale == .large ? .largeTitle : .body)
                         }
                 }
         }

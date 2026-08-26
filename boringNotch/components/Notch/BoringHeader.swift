@@ -47,12 +47,13 @@ struct BoringHeader: View {
                                 vm.toggleCameraPreview()
                             }) {
                                 Capsule()
-                                    .fill(Color.white.opacity(0.08))
-                                    .frame(width: 26, height: 26)
+                                    .fill(.black)
+                                    .frame(width: 30, height: 30)
                                     .overlay {
                                         Image(systemName: "web.camera")
-                                            .font(.system(size: 11, weight: .semibold))
-                                            .foregroundColor(Color(white: 0.8))
+                                            .foregroundColor(.white)
+                                            .padding()
+                                            .imageScale(.medium)
                                     }
                             }
                             .buttonStyle(PlainButtonStyle())
@@ -62,15 +63,16 @@ struct BoringHeader: View {
                                 DispatchQueue.main.async {
                                     SettingsWindowController.shared.showWindow()
                                 }
-
+                                
                             }) {
                                 Capsule()
-                                    .fill(Color.white.opacity(0.08))
-                                    .frame(width: 26, height: 26)
+                                    .fill(.black)
+                                    .frame(width: 30, height: 30)
                                     .overlay {
                                         Image(systemName: "gear")
-                                            .font(.system(size: 11, weight: .semibold))
-                                            .foregroundColor(Color(white: 0.8))
+                                            .foregroundColor(.white)
+                                            .padding()
+                                            .imageScale(.medium)
                                     }
                             }
                             .buttonStyle(PlainButtonStyle())
