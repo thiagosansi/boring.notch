@@ -146,6 +146,7 @@ struct MusicControlsView: View {
                 songInfo(width: geo.size.width)
             }
             .frame(height: songInfoHeight)
+            .clipped()
 
             musicSlider
 

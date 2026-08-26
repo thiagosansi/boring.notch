@@ -67,21 +67,26 @@ class CalendarService: CalendarServiceProviding {
         // Fetch regular events
         if hasAccess(to: .event) {
             let eventCalendars = ekCalendars.filter { store.calendars(for: .event).contains($0) }
-            let predicate = store.predicateForEvents(withStart: start, end: end, calendars: eventCalendars)
-            let ekEvents = store.events(matching: predicate)
-            events.append(contentsOf: ekEvents.compactMap { EventModel(from: $0) })
+            if !eventCalendars.isEmpty {
+                let predicate = store.predicateForEvents(withStart: start, end: end, calendars: eventCalendars)
+                let ekEvents = store.events(matching: predicate)
+                events.append(contentsOf: ekEvents.compactMap { EventModel(from: $0) })
+            }
         }
-        
+
         // Fetch reminders
         if hasAccess(to: .reminder) {
             let reminderCalendars = ekCalendars.filter { store.calendars(for: .reminder).contains($0) }
-            events.append(contentsOf: await fetchReminders(from: start, to: end, calendars: reminderCalendars))
+            if !reminderCalendars.isEmpty {
+                events.append(contentsOf: await fetchReminders(from: start, to: end, calendars: reminderCalendars))
+            }
         }
         
         return events.sorted { $0.start < $1.start }
     }
     
     private func fetchReminders(from start: Date, to end: Date, calendars: [EKCalendar]) async -> [EventModel] {
+        guard !calendars.isEmpty else { return [] }
         return await withCheckedContinuation { continuation in
             // Create predicate for reminders with due dates in the specified range
             let predicate = store.predicateForReminders(in: calendars)
