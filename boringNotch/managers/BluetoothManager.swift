@@ -58,7 +58,13 @@ final class BluetoothManager: NSObject, ObservableObject {
         }
     }
 
+    // IOBluetooth delivers these on its own coordinator queue (seen on macOS 27), while
+    // poll() mutates the same state on the main thread. Serialize everything on main.
     @objc private func deviceConnected(_ notification: IOBluetoothUserNotification, device: IOBluetoothDevice) {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self] in self?.deviceConnected(notification, device: device) }
+            return
+        }
         let key = device.addressString ?? UUID().uuidString
         disconnectNotifications[key]?.unregister()
         disconnectNotifications[key] = device.register(
@@ -69,6 +75,10 @@ final class BluetoothManager: NSObject, ObservableObject {
     }
 
     @objc private func deviceDisconnected(_ notification: IOBluetoothUserNotification, device: IOBluetoothDevice) {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self] in self?.deviceDisconnected(notification, device: device) }
+            return
+        }
         notification.unregister()
         if let key = device.addressString { disconnectNotifications[key] = nil }
         announce(device, connected: false)
