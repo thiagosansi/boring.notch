@@ -42,6 +42,22 @@ struct BoringHeader: View {
                         OpenNotchHUD(type: $coordinator.sneakPeek.type, value: $coordinator.sneakPeek.value, icon: $coordinator.sneakPeek.icon)
                             .transition(.scale(scale: 0.8).combined(with: .opacity))
                     } else {
+                        Button(action: {
+                            // Alterna ditado no Hammerspoon; activates=false para não roubar foco do app atual
+                            let cfg = NSWorkspace.OpenConfiguration()
+                            cfg.activates = false
+                            NSWorkspace.shared.open(URL(string: "hammerspoon://dictation")!, configuration: cfg)
+                        }) {
+                            Capsule()
+                                .fill(Color.white.opacity(0.08))
+                                .frame(width: 26, height: 26)
+                                .overlay {
+                                    Image(systemName: "mic.fill")
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundColor(Color(white: 0.8))
+                                }
+                        }
+                        .buttonStyle(PlainButtonStyle())
                         if Defaults[.showMirror] {
                             Button(action: {
                                 vm.toggleCameraPreview()
